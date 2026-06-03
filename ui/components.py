@@ -56,8 +56,24 @@ class ComboBox:
         self.selected_index = 0
         self.is_open = False
         self.hovered_index = -1
+        
+        # Cấu hình giới hạn cuộn hiển thị tối đa 5 mục
+        self.max_visible_items = 5
+        self.item_height = height
+        self.dropdown_max_height = self.max_visible_items * self.item_height
+        
+        self.scroll_y = 0
+        self.max_scroll_y = max(0, (len(self.options) - self.max_visible_items) * self.item_height)
+        
+        # Cấu hình thanh trượt bên trong danh sách xổ xuống
+        self.scrollbar_width = 6
+        self.is_dragging = False
+        self.drag_start_y = 0
+        self.scroll_start_y = 0
+        self.scrollbar_rect = pygame.Rect(0, 0, 0, 0)
 
     def draw(self, screen):
+        # 1. Vẽ hộp hiển thị lựa chọn hiện tại đang đóng/mở
         pygame.draw.rect(screen, (248, 249, 250), self.rect, border_radius=4)
         pygame.draw.rect(screen, (189, 195, 199), self.rect, width=2, border_radius=4)
         
@@ -67,35 +83,114 @@ class ComboBox:
         arrow_surf = self.font.render("▼" if not self.is_open else "▲", True, config.COLOR_TEXT_DARK)
         screen.blit(arrow_surf, (self.rect.right - 25, self.rect.y + (self.rect.height - arrow_surf.get_height())//2))
         
+        # 2. Nếu đang mở, tiến hành vẽ danh sách con giới hạn chiều cao bằng Sub-surface
         if self.is_open:
+            actual_items_height = len(self.options) * self.item_height
+            view_height = min(actual_items_height, self.dropdown_max_height)
+            
+            # Định vị khu vực dropdown bao quanh
+            dropdown_rect = pygame.Rect(self.rect.x, self.rect.bottom, self.rect.width, view_height)
+            
+            # Khởi tạo mặt nạ phụ cắt vùng tràn (Clip Surface)
+            clip_surface = pygame.Surface((self.rect.width, view_height), pygame.SRCALPHA)
+            pygame.draw.rect(clip_surface, config.COLOR_CARD, (0, 0, self.rect.width, view_height))
+            
+            # Tính toán vị trí chuột tương đối để xử lý Hover khi có dịch chuyển cuộn trục Y
+            mouse_pos = pygame.mouse.get_pos()
+            relative_mouse_y = mouse_pos[1] - self.rect.bottom + self.scroll_y
+            
+            self.hovered_index = -1
+            if dropdown_rect.collidepoint(mouse_pos) and not self.is_dragging:
+                self.hovered_index = int(relative_mouse_y // self.item_height)
+                if self.hovered_index >= len(self.options) or self.hovered_index < 0:
+                    self.hovered_index = -1
+
+            # Vẽ danh sách các mục thuật toán lên Surface con
             for i, option in enumerate(self.options):
-                item_rect = pygame.Rect(self.rect.x, self.rect.bottom + i * self.rect.height, self.rect.width, self.rect.height)
-                bg_color = (220, 225, 230) if i == self.hovered_index else config.COLOR_CARD
-                pygame.draw.rect(screen, bg_color, item_rect)
-                pygame.draw.rect(screen, (210, 215, 220), item_rect, width=1)
+                item_y_pos = i * self.item_height - self.scroll_y
+                item_rect = pygame.Rect(0, item_y_pos, self.rect.width, self.item_height)
                 
+                # Đổ màu nền nếu đang di chuột qua mục đó
+                if i == self.hovered_index:
+                    pygame.draw.rect(clip_surface, (220, 225, 230), item_rect)
+                    
+                pygame.draw.rect(clip_surface, (210, 215, 220), item_rect, width=1)
                 opt_surf = self.font.render(option, True, config.COLOR_TEXT_DARK)
-                screen.blit(opt_surf, (item_rect.x + 10, item_rect.y + (item_rect.height - opt_surf.get_height())//2))
+                clip_surface.blit(opt_surf, (10, item_y_pos + (self.item_height - opt_surf.get_height())//2))
+                
+            # 3. Tính toán và vẽ cục kéo trượt (Scrollbar) nếu tổng số lượng vượt quá 5 mục
+            if self.max_scroll_y > 0:
+                ratio = view_height / actual_items_height
+                scrollbar_height = max(int(view_height * ratio), 20)
+                
+                scroll_percent = self.scroll_y / self.max_scroll_y
+                available_track = view_height - scrollbar_height
+                scrollbar_y_pos = available_track * scroll_percent
+                
+                # Định dạng vùng nhận diện nút kéo trượt thực tế trên màn hình chính
+                self.scrollbar_rect = pygame.Rect(
+                    self.rect.right - self.scrollbar_width - 4,
+                    self.rect.bottom + scrollbar_y_pos,
+                    self.scrollbar_width,
+                    scrollbar_height
+                )
+                
+                # Vẽ thanh trượt đè lên trên bề mặt danh sách xổ xuống
+                pygame.draw.rect(clip_surface, (127, 140, 141), (self.rect.width - self.scrollbar_width - 4, scrollbar_y_pos, self.scrollbar_width, scrollbar_height), border_radius=3)
+            
+            # Đẩy toàn bộ dropdown lên màn hình
+            screen.blit(clip_surface, (self.rect.x, self.rect.bottom))
+            pygame.draw.rect(screen, (189, 195, 199), dropdown_rect, width=2, border_radius=2)
 
     def handle_event(self, event):
         mouse_pos = pygame.mouse.get_pos()
-        if event.type == pygame.MOUSEMOTION:
-            if self.is_open:
-                self.hovered_index = -1
-                for i in range(len(self.options)):
-                    item_rect = pygame.Rect(self.rect.x, self.rect.bottom + i * self.rect.height, self.rect.width, self.rect.height)
-                    if item_rect.collidepoint(mouse_pos):
-                        self.hovered_index = i
-                        break
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        actual_items_height = len(self.options) * self.item_height
+        view_height = min(actual_items_height, self.dropdown_max_height)
+        dropdown_rect = pygame.Rect(self.rect.x, self.rect.bottom, self.rect.width, view_height)
+        
+        # Bắt sự kiện kéo chuột trên thanh cuộn của ComboBox
+        if self.is_open and self.max_scroll_y > 0:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if self.scrollbar_rect.collidepoint(mouse_pos):
+                    self.is_dragging = True
+                    self.drag_start_y = mouse_pos[1]
+                    self.scroll_start_y = self.scroll_y
+                    return True
+                    
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                if self.is_dragging:
+                    self.is_dragging = False
+                    return True
+                    
+            elif event.type == pygame.MOUSEMOTION and self.is_dragging:
+                delta_y = mouse_pos[1] - self.drag_start_y
+                scrollbar_height = self.scrollbar_rect.height
+                available_track = view_height - scrollbar_height
+                if available_track > 0:
+                    scroll_delta = (delta_y / available_track) * self.max_scroll_y
+                    self.scroll_y = max(0, min(self.scroll_start_y + scroll_delta, self.max_scroll_y))
+                return True
+                
+            # Hỗ trợ dùng con lăn chuột ngay trên danh sách xổ xuống
+            elif event.type == pygame.MOUSEWHEEL and dropdown_rect.collidepoint(mouse_pos):
+                self.scroll_y = max(0, min(self.scroll_y - event.y * self.item_height, self.max_scroll_y))
+                return True
+
+        # Bắt sự kiện Click chọn mục mở rộng hoặc đóng danh sách
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.is_dragging:
+                return False
+                
             if self.rect.collidepoint(mouse_pos):
                 self.is_open = not self.is_open
                 return True
             elif self.is_open:
-                for i in range(len(self.options)):
-                    item_rect = pygame.Rect(self.rect.x, self.rect.bottom + i * self.rect.height, self.rect.width, self.rect.height)
-                    if item_rect.collidepoint(mouse_pos):
-                        self.selected_index = i
+                if dropdown_rect.collidepoint(mouse_pos):
+                    # Tính toán chính xác vị trí mục được click sau khi cuộn
+                    relative_mouse_y = mouse_pos[1] - self.rect.bottom + self.scroll_y
+                    clicked_idx = int(relative_mouse_y // self.item_height)
+                    if 0 <= clicked_idx < len(self.options):
+                        self.selected_index = clicked_idx
                         self.is_open = False
                         return True
                 self.is_open = False
