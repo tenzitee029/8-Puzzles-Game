@@ -7,13 +7,13 @@ from ui.components import Button, TextBox, ComboBox, ScrollableLogBox, Scrollabl
 # Import các thuật toán từ các module phân mảnh mới tách
 from ai.base_search import bfs_search, dfs_search, iterative_deepening_search, ucs_search
 from ai.heuristic_apps import greedy_search, a_star_search, ida_star_search
-from ai.local_search import simple_hill_climbing, steepest_ascent_hill_climbing
+from ai.local_search import simple_hill_climbing, steepest_ascent_hill_climbing, stochastic_hill_climbing, random_restart_hill_climbing, local_beam_search
 
 class PygameApp:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((config.WINDOW_WIDTH, config.WINDOW_HEIGHT))
-        pygame.display.set_caption("8-Puzzle Solver Visualization - Modular Pygame Edition")
+        pygame.display.set_caption("8-Puzzles")
         self.clock = pygame.Clock()
         
         self.font_large = pygame.font.SysFont("sans-serif", 36, bold=True)
@@ -28,7 +28,7 @@ class PygameApp:
         self.current_step = 0
         self.is_searching = False
         
-        self.algorithms = ["BFS", "DFS", "IDS", "UCS", "GREEDY", "A*", "IDA*", "SimpleHC", "SteepestAscentHC"]
+        self.algorithms = ["BFS", "DFS", "IDS", "UCS", "GREEDY", "A*", "IDA*", "SimpleHC", "SteepestAscentHC", "StochasticHC", "RandomRestartHC", "LocalBeamSearch"]
         self.logs_data = ["[SYSTEM]: Modular Pygame UI Initialized successfully.", "Choose an algorithm and start searching."]
         self.path_string = "Start -> Awaiting search results..."
 
@@ -96,6 +96,9 @@ class PygameApp:
         elif selected_algo == "IDA*": self.path = ida_star_search(self.initial_state, self.goal_state, self.append_log)
         elif selected_algo == "SimpleHC": self.path = simple_hill_climbing(self.initial_state, self.goal_state, self.append_log)
         elif selected_algo == "SteepestAscentHC": self.path = steepest_ascent_hill_climbing(self.initial_state, self.goal_state, self.append_log)
+        elif selected_algo == "StochasticHC": self.path = stochastic_hill_climbing(self.initial_state, self.goal_state, self.append_log)
+        elif selected_algo == "RandomRestartHC": self.path = random_restart_hill_climbing(self.initial_state, self.goal_state, self.append_log)
+        elif selected_algo == "LocalBeamSearch": self.path = local_beam_search(self.initial_state, self.goal_state, self.append_log)
         end_time = time.time()
         
         if self.path:
