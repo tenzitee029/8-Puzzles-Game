@@ -8,6 +8,7 @@ from ui.components import Button, TextBox, ComboBox, ScrollableLogBox, Scrollabl
 from ai.base_search import bfs_search, dfs_search, iterative_deepening_search, ucs_search
 from ai.heuristic_apps import greedy_search, a_star_search, ida_star_search
 from ai.local_search import simple_hill_climbing, steepest_ascent_hill_climbing, stochastic_hill_climbing, random_restart_hill_climbing, local_beam_search
+from ai.advanced_search import simulated_annealing
 
 class PygameApp:
     def __init__(self):
@@ -28,7 +29,10 @@ class PygameApp:
         self.current_step = 0
         self.is_searching = False
         
-        self.algorithms = ["BFS", "DFS", "IDS", "UCS", "GREEDY", "A*", "IDA*", "SimpleHC", "SteepestAscentHC", "StochasticHC", "RandomRestartHC", "LocalBeamSearch"]
+        self.algorithms = ["BFS", "DFS", "IDS", "UCS", 
+                           "GREEDY", "A*", "IDA*", 
+                           "SimpleHC", "SteepestAscentHC", "StochasticHC", "RandomRestartHC", "LocalBeamSearch",
+                           "SimulatedAnnealing"]
         self.logs_data = ["[SYSTEM]: Modular Pygame UI Initialized successfully.", "Choose an algorithm and start searching."]
         self.path_string = "Start -> Awaiting search results..."
 
@@ -99,6 +103,7 @@ class PygameApp:
         elif selected_algo == "StochasticHC": self.path = stochastic_hill_climbing(self.initial_state, self.goal_state, self.append_log)
         elif selected_algo == "RandomRestartHC": self.path = random_restart_hill_climbing(self.initial_state, self.goal_state, self.append_log)
         elif selected_algo == "LocalBeamSearch": self.path = local_beam_search(self.initial_state, self.goal_state, self.append_log)
+        elif selected_algo == "SimulatedAnnealing": self.path = simulated_annealing(self.initial_state, self.goal_state, self.append_log)
         end_time = time.time()
         
         if self.path:
