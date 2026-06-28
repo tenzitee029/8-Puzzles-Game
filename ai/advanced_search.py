@@ -2,8 +2,8 @@
 import random
 import math
 from core.game_logic import get_valid_moves, apply_move
-from ai.base_search import build_path
-from ai.heuristic_apps import heuristic_misplaced_tiles
+from ai.uninformed import build_path
+from ai.informed import heuristic_misplaced_tiles
 
 # --- SIMULATED ANNEALING ALGORITHM ---
 def simulated_annealing(initial_state, goal_state, log_func):

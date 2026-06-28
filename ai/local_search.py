@@ -1,6 +1,6 @@
 from core.game_logic import get_valid_moves, apply_move
-from ai.base_search import build_path
-from ai.heuristic_apps import get_state_value
+from ai.uninformed import build_path
+from ai.informed import get_state_value
 import random
 
 def simple_hill_climbing(initial_state, goal_state, log_func):

@@ -5,11 +5,11 @@ import config
 from ui.components import Button, TextBox, ComboBox, ScrollableLogBox, ScrollablePathBox
 
 # Import các thuật toán từ các module phân mảnh mới tách
-from ai.base_search import bfs_search, dfs_search, iterative_deepening_search, ucs_search
-from ai.heuristic_apps import greedy_search, a_star_search, ida_star_search
+from ai.uninformed import bfs_search, dfs_search, iterative_deepening_search, ucs_search
+from ai.informed import greedy_search, a_star_search, ida_star_search
 from ai.local_search import simple_hill_climbing, steepest_ascent_hill_climbing, stochastic_hill_climbing, random_restart_hill_climbing, local_beam_search
 from ai.advanced_search import simulated_annealing
-from ai.belief_and_or import and_or_graph_search, belief_fully_observable_search, belief_unobservable_search, belief_partially_observable_search
+from ai.complex import and_or_graph_search, belief_fully_observable_search, belief_unobservable_search, belief_partially_observable_search
 from ai.csp_solvers import backtracking_search, forward_checking_search, ac3_search, min_conflicts_search
 
 class PygameApp:

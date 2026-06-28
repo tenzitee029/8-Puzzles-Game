@@ -1,5 +1,5 @@
 from core.game_logic import get_valid_moves, apply_move, apply_move_ucs
-from ai.base_search import build_path
+from ai.uninformed import build_path
 
 def heuristic_misplaced_tiles(state, goal_state):
     count = 0
