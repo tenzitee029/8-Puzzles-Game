@@ -24,7 +24,7 @@ def greedy_search(initial_state, goal_state, log_func):
         for node in frontier:
             if node['h_value'] < current_node['h_value']:
                 current_node = node             
-        log_func(f"Step {step}: Pop best node (h(n)={current_node['h_value']})\nState: {current_node['state']}")
+        log_func(f"Bước {step}: Lấy nút tốt nhất (h(n)={current_node['h_value']})\nTrạng thái: {current_node['state']}")
         step += 1       
         current_state = current_node['state']
         if current_state == goal_state:
@@ -54,7 +54,7 @@ def a_star_search(initial_state, goal_state, log_func):
         for node in frontier:
             if node['f_value'] < current_node['f_value']:
                 current_node = node
-        log_func(f"Step {step}: Pop best node (f(n)={current_node['f_value']}, g(n)={current_node['g_value']})\nState: {current_node['state']}")
+        log_func(f"Bước {step}: Lấy nút tốt nhất (f(n)={current_node['f_value']}, g(n)={current_node['g_value']})\nTrạng thái: {current_node['state']}")
         step += 1  
         current_state = current_node['state']
         if current_state == goal_state:
@@ -105,7 +105,7 @@ def ida_star_search(initial_state, goal_state, log_func):
                 curr_parent = curr_parent['parent_node']    
             if is_cycle: continue      
             child_node = {'state': new_state, 'parent_node': node, 'action': move, 'g_value': g + move_cost}  
-            log_func(f"  DLS-A* Checking: f(n)={g + move_cost + heuristic_misplaced_tiles(new_state, goal_state)} (Limit={f_limit})\n  State: {new_state}")
+            log_func(f"  DLS-A* Kiểm tra: f(n)={g + move_cost + heuristic_misplaced_tiles(new_state, goal_state)} (Giới hạn={f_limit})\n  Trạng thái: {new_state}")
             result, found_node = search(child_node, g + move_cost, f_limit)
             if result == 'FOUND': return 'FOUND', found_node   
             if result < min_cutoff: min_cutoff = result   
@@ -115,7 +115,7 @@ def ida_star_search(initial_state, goal_state, log_func):
     start_node = {'state': initial_state, 'parent_node': None, 'action': None, 'g_value': 0}
     loop_count = 1
     while f_limit != float('inf') and loop_count < 100:
-        log_func(f"\n=> IDA* ITERATION {loop_count}: Setting f-limit = {f_limit}")
+        log_func(f"\n=> VÒNG IDA* {loop_count}: Đặt f-giới hạn = {f_limit}")
         result, found_node = search(start_node, 0, f_limit)       
         if result == 'FOUND': return build_path(found_node)
         f_limit = result

@@ -11,6 +11,7 @@ from ai.local_search import simple_hill_climbing, steepest_ascent_hill_climbing,
 from ai.advanced_search import simulated_annealing
 from ai.complex import and_or_graph_search, belief_fully_observable_search, belief_unobservable_search, belief_partially_observable_search
 from ai.csp_solvers import backtracking_search, forward_checking_search, ac3_search, min_conflicts_search
+from ai.adversarial import play_adversarial_match
 
 class PygameApp:
     def __init__(self):
@@ -36,7 +37,8 @@ class PygameApp:
                            "SimpleHC", "SteepestAscentHC", "StochasticHC", "RandomRestartHC", "LocalBeamSearch",
                            "SimulatedAnnealing",
                            "AND-OR_Graph", "Belief_FullyObs", "Belief_Unobserved", "Belief_PartialObs",
-                           "CSP_Backtracking", "CSP_ForwardChecking", "CSP_AC3", "CSP_MinConflicts"]
+                           "CSP_Backtracking", "CSP_ForwardChecking", "CSP_AC3", "CSP_MinConflicts",
+                           "Adversarial - Minimax", "Adversarial - Alpha-Beta", "Adversarial - Expectimax"]
         self.logs_data = ["[SYSTEM]: Modular Pygame UI Initialized successfully.", "Choose an algorithm and start searching."]
         self.path_string = "Start -> Awaiting search results..."
 
@@ -91,7 +93,7 @@ class PygameApp:
         self.btn_solve.text = "SEARCHING..."
         selected_algo = self.algo_combo.get_selected()
         
-        self.logs_data = [f"LAUNCHING ALGORITHM: {selected_algo}", f"Initial State: {self.initial_state}"]
+        self.logs_data = [f"BẮT ĐẦU THUẬT TOÁN: {selected_algo}", f"Trạng thái ban đầu: {self.initial_state}"]
         self.scrollable_log_box.update_logs(self.logs_data)
         
         start_time = time.time()
@@ -120,17 +122,26 @@ class PygameApp:
         elif selected_algo == "CSP_ForwardChecking": self.path = forward_checking_search(csp_problem, self.append_log)
         elif selected_algo == "CSP_AC3": self.path = ac3_search(csp_problem, self.append_log)
         elif selected_algo == "CSP_MinConflicts": self.path = min_conflicts_search(csp_problem, self.append_log)
+        elif selected_algo in ["Adversarial - Minimax", "Adversarial - Alpha-Beta", "Adversarial - Expectimax"]:
+            history, winner = play_adversarial_match(self.initial_state, self.goal_state, selected_algo, self.append_log)
+            self.path = history
+            if winner:
+                self.append_log(f"=> MATCH COMPLETE: Winner = {winner}")
+                actions = [f"{item['player']}:{item['action']}" for item in history if item['action'] is not None]
+                self.path_string = "Start -> " + " -> ".join(actions)
+            else:
+                self.path_string = "Match ended in a draw."
         end_time = time.time()
         
         if self.path:
-            self.append_log(f"=> SUCCESS! Found solution in {round(end_time - start_time, 4)}s!")
+            self.append_log(f"=> THÀNH CÔNG! Tìm được lời giải trong {round(end_time - start_time, 4)} giây!")
             actions = [node['action'] for node in self.path if node['action'] is not None]
-            self.path_string = "Start -> " + " -> ".join(actions) + " -> GOAL"
+            self.path_string = "Bắt đầu -> " + " -> ".join(actions) + " -> ĐÍCH"
             self.current_step = 0
             self.current_state = self.path[self.current_step]['state']
         else:
-            self.append_log("=> FAILED! Solution path not found.")
-            self.path_string = "Failure: This puzzle state is unsolvable."
+            self.append_log("=> THẤT BẠI! Không tìm được đường đi đến đích.")
+            self.path_string = "Lỗi: Trạng thái xếp hình này không thể giải được."
             
         self.scrollable_path_box.update_text(self.path_string)
         self.is_searching = False
@@ -181,7 +192,7 @@ class PygameApp:
 
         right_panel = pygame.Rect(295, 15, 740, 480)
         pygame.draw.rect(self.screen, config.COLOR_CARD, right_panel, border_radius=8)
-        lbl_log_title = self.font_medium.render("3. Frontier Node Processing Log:", True, config.COLOR_DANGER)
+        lbl_log_title = self.font_medium.render("3. Nhật ký xử lý Frontier:", True, config.COLOR_DANGER)
         self.screen.blit(lbl_log_title, (310, 25))
         self.scrollable_log_box.draw(self.screen)
 

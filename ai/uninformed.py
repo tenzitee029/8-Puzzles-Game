@@ -17,7 +17,7 @@ def bfs_search(initial_state, goal_state, log_func):
     step = 1
     while queue:
         current_node = queue.pop(0) 
-        log_func(f"Step {step}: Pop node from Queue\nState: {current_node['state']}")
+        log_func(f"Bước {step}: Lấy nút từ hàng đợi\nTrạng thái: {current_node['state']}")
         step += 1
         for move in get_valid_moves(current_node['state']):
             new_state = apply_move(current_node['state'], move)
@@ -36,7 +36,7 @@ def dfs_search(initial_state, goal_state, log_func):
     step = 1
     while stack:
         current_node = stack.pop() 
-        log_func(f"Step {step}: Pop node from Stack Top\nState: {current_node['state']}")
+        log_func(f"Bước {step}: Lấy nút từ đỉnh ngăn xếp\nTrạng thái: {current_node['state']}")
         step += 1
         possible_moves = get_valid_moves(current_node['state'])
         possible_moves.reverse()    
@@ -63,7 +63,7 @@ def depth_limited_search(initial_state, goal_state, limit, log_func):
     step = 1
     while stack:
         node = stack.pop()
-        log_func(f"  DLS Step {step}: Check node (Depth={node['depth']})\n  State: {node['state']}")
+        log_func(f"  Bước DLS {step}: Kiểm tra nút (Độ sâu={node['depth']})\n  Trạng thái: {node['state']}")
         step += 1
         if node['state'] == goal_state: return node  
         if node['depth'] > limit:
@@ -80,7 +80,7 @@ def depth_limited_search(initial_state, goal_state, limit, log_func):
 def iterative_deepening_search(initial_state, goal_state, log_func):
     depth = 0
     while depth < 22:
-        log_func(f"\n=> SEARCHING AT DEPTH LIMIT = {depth}")
+        log_func(f"\n=> ĐANG TÌM KIẾM VỚI NGƯỠNG ĐỘ SÂU = {depth}")
         result = depth_limited_search(initial_state, goal_state, depth, log_func)
         if result != 'cutoff': 
             if result != 'failure': return build_path(result)
@@ -100,7 +100,7 @@ def ucs_search(initial_state, goal_state, log_func):
             if node['path_cost'] < current_node['path_cost']:
                 current_node = node
         queue.remove(current_node)
-        log_func(f"Step {step}: Pop cheapest node (Total Cost={current_node['path_cost']})\nState: {current_node['state']}")
+        log_func(f"Bước {step}: Lấy nút có chi phí nhỏ nhất (Tổng chi phí={current_node['path_cost']})\nTrạng thái: {current_node['state']}")
         step += 1
         for move in get_valid_moves(current_node['state']):
             new_state, move_cost = apply_move_ucs(current_node['state'], move)
